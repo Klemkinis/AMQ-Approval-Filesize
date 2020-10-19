@@ -54,12 +54,8 @@ function kilobitsFrom(bytes) {
 
 // Unwrapping helpers
 function getSongLink() {
-    var songInfoTable = getSongInfoTable()
-    var songLink = songInfoTable.children[0].children[4].children[1].innerText // FIXME: still crashess
-    if (songLink == null) {
-        throw "Could not get song link from info table!"
-    }
-    return songInfoTable.children[0].children[4].children[1].innerText
+    var videoPlayer = getVideoPlayer()
+    return videoPlayer.src
 }
 
 function getSongInfoTable() {
