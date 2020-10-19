@@ -1,5 +1,6 @@
 // ==UserScript==
 // @name         AMQ Approval Filesize
+// @version      0.1
 // @match        https://animemusicquiz.com/admin/approveVideos
 // @match        https://animemusicquiz.com/admin/approveVideos?skipMp3=true
 // ==/UserScript==
