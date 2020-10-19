@@ -1,33 +1,52 @@
 // ==UserScript==
 // @name         AMQ Approval Filesize
-// @version      0.1
+// @version      0.2
 // @match        https://animemusicquiz.com/admin/approveVideos
 // @match        https://animemusicquiz.com/admin/approveVideos?skipMp3=true
 // ==/UserScript==
 
 var corsProxy = "https://cors-anywhere.herokuapp.com/"
+
+var filesize = 0
+var mediaDuration = 0
 var songLink = getSongLink()
+
 checkFilesize(songLink)
+checkMediaDuration()
 
 function checkFilesize(link) {
     var request = new XMLHttpRequest()
     request.onreadystatechange = function() {
         if (this.readyState != 4 || this.status != 200) {
-            return
+            throw "Could not load media filesize"
         }
 
-        var filesize = this.getResponseHeader('Content-Length')
-        displayFilesize(filesize)
+        filesize = this.getResponseHeader('Content-Length')
+        displayFilesize()
     }
 
     request.open("HEAD", corsProxy + link, true)
     request.send()
 }
 
-function displayFilesize(filesize) {
+function checkMediaDuration() {
+    var videoPlayer = getVideoPlayer()
+    if (isNaN(videoPlayer.duration)) {
+        setTimeout(checkMediaDuration, 1000)
+        return
+    }
+
+    mediaDuration = videoPlayer.duration
+    displayFilesize()
+}
+
+function displayFilesize() {
+    if (mediaDuration == 0 || filesize == 0) {
+        return
+    }
 
     var filesizeInMegabytes = megabytesFrom(filesize)
-    var bitrate = approximateBitrateFrom(filesize)
+    var bitrate = filesize / mediaDuration
     var bitrateInKilobits = kilobitsFrom(bitrate)
 
     var songInfoTable = getSongInfoTable()
@@ -38,12 +57,6 @@ function displayFilesize(filesize) {
 }
 
 // Bitrate
-function approximateBitrateFrom(filesize) {
-    var videoPlayer = getVideoPlayer()
-    var mediaLength = videoPlayer.duration
-    return filesize / mediaLength
-}
-
 function megabytesFrom(bytes) {
     return (bytes / (1024 * 1024)).toFixed(2)
 }
