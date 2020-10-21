@@ -7,12 +7,8 @@
 
 var corsProxy = "https://cors-anywhere.herokuapp.com/"
 
-var filesize = 0
-var mediaDuration = 0
 var songLink = getSongLink()
-
 checkFilesize(songLink)
-checkMediaDuration()
 
 function checkFilesize(link) {
     var request = new XMLHttpRequest()
@@ -21,48 +17,31 @@ function checkFilesize(link) {
             return
         }
 
-        filesize = this.getResponseHeader('Content-Length')
-        displayFilesize()
+        var filesize = this.getResponseHeader('Content-Length')
+        displayFilesize(filesize)
     }
 
     request.open("HEAD", corsProxy + link, true)
     request.send()
 }
 
-function checkMediaDuration() {
-    var videoPlayer = getVideoPlayer()
-    if (isNaN(videoPlayer.duration)) {
-        setTimeout(checkMediaDuration, 1000)
-        return
-    }
-
-    mediaDuration = videoPlayer.duration
-    displayFilesize()
+function calculateFilesize() {
+    var songInfoTable = getSongInfoTable()
+    var bitrateRow = songInfoTable.children[0].children[7]
+    var bitrate = bitrateRow.children[1].innerHTML.split(" ")[0]
+    return (bitrate / 8 * getVideoPlayer().duration / 1024).toFixed(2)
 }
 
-function displayFilesize() {
-    if (mediaDuration == 0 || filesize == 0) {
-        return
-    }
-
+function displayFilesize(filesize) {
     var filesizeInMegabytes = megabytesFrom(filesize)
-    var bitrate = filesize / mediaDuration
-    var bitrateInKilobits = kilobitsFrom(bitrate)
-
     var songInfoTable = getSongInfoTable()
-    var filesizeRow = songInfoTable.insertRow()
-
-    filesizeRow.insertCell(0).innerHTML = "Size"
-	filesizeRow.insertCell(1).innerHTML = filesizeInMegabytes + " MB (Approx bitrate: " + bitrateInKilobits + " kb/s)"
+    var bitrateRow = songInfoTable.children[0].children[7]
+    bitrateRow.children[1].innerHTML += " (Approx size: " + calculateFilesize() + "MB) (Real size: " + filesizeInMegabytes + "MB)"
 }
 
 // Bitrate
 function megabytesFrom(bytes) {
     return (bytes / (1024 * 1024)).toFixed(2)
-}
-
-function kilobitsFrom(bytes) {
-    return (bytes * 8 / (1024)).toFixed(2)
 }
 
 // Unwrapping helpers
