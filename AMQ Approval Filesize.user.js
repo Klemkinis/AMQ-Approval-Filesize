@@ -1,53 +1,60 @@
 // ==UserScript==
 // @name         AMQ Approval Filesize
-// @version      0.2
+// @version      0.3
 // @match        https://animemusicquiz.com/admin/approveVideos
 // @match        https://animemusicquiz.com/admin/approveVideos?skipMp3=true
 // ==/UserScript==
 
-var corsProxy = "https://cors-anywhere.herokuapp.com/"
-
-var songLink = getSongLink()
-checkFilesize(songLink)
-
-function checkFilesize(link) {
-    var request = new XMLHttpRequest()
-    request.onreadystatechange = function() {
-        if (this.readyState != 4 || this.status != 200) {
-            return
-        }
-
-        var filesize = this.getResponseHeader('Content-Length')
-        displayFilesize(filesize)
-    }
-
-    request.open("HEAD", corsProxy + link, true)
-    request.send()
-}
+var bitrate = getBitrate()
+calculateFilesize()
 
 function calculateFilesize() {
-    var songInfoTable = getSongInfoTable()
-    var bitrateRow = songInfoTable.children[0].children[7]
-    var bitrate = bitrateRow.children[1].innerHTML.split(" ")[0]
-    return (bitrate / 8 * getVideoPlayer().duration / 1024).toFixed(2)
+    var videoPlayer = getVideoPlayer()
+    if (isNaN(videoPlayer.duration)) {
+        setTimeout(calculateFilesize, 1000)
+        return
+    }
+    var mediaDuration = videoPlayer.duration
+    var filesizeInKilobytes = bitrate / 8 * mediaDuration
+    var filesizeInMegabytes = megabytesFrom(filesizeInKilobytes)
+    displayFilesize(filesizeInMegabytes)
 }
 
 function displayFilesize(filesize) {
-    var filesizeInMegabytes = megabytesFrom(filesize)
-    var songInfoTable = getSongInfoTable()
-    var bitrateRow = songInfoTable.children[0].children[7]
-    bitrateRow.children[1].innerHTML += " (Approx size: " + calculateFilesize() + "MB) (Real size: " + filesizeInMegabytes + "MB)"
+    var bitrateCell = getBitrateCell()
+    bitrateCell.innerHTML += " (Approx size: " + filesize + "MB)"
 }
 
 // Bitrate
-function megabytesFrom(bytes) {
-    return (bytes / (1024 * 1024)).toFixed(2)
+function megabytesFrom(kilobytes) {
+    return (kilobytes / 1024).toFixed(2)
 }
 
 // Unwrapping helpers
-function getSongLink() {
-    var videoPlayer = getVideoPlayer()
-    return videoPlayer.src
+function getBitrate() {
+    var bitrateCell = getBitrateCell()
+    var bitrate = bitrateCell.innerHTML.split(" ")[0]
+    return bitrate
+}
+
+function getBitrateCell() {
+    var songInfoTable = getSongInfoTable()
+    var songInfoTableBody = songInfoTable.children[0]
+    if (songInfoTableBody == null) {
+        throw "Missing song info table data!"
+    }
+
+    var bitrateRow = songInfoTableBody.children[7]
+    if (bitrateRow == null) {
+        throw "Missing bitrate in song info table!"
+    }
+
+    var bitrateCell = bitrateRow.children[1]
+    if (bitrateCell == null) {
+        throw "Missing bitrate value in song info table!"
+    }
+
+    return bitrateCell
 }
 
 function getSongInfoTable() {
