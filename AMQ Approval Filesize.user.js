@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         AMQ Approval Filesize
-// @version      0.3
+// @version      0.4
 // @match        https://animemusicquiz.com/admin/approveVideos
 // @match        https://animemusicquiz.com/admin/approveVideos?skipMp3=true
 // ==/UserScript==
@@ -44,7 +44,7 @@ function getBitrateCell() {
         throw "Missing song info table data!"
     }
 
-    var bitrateRow = songInfoTableBody.children[7]
+    var bitrateRow = songInfoTableBody.children[8]
     if (bitrateRow == null) {
         throw "Missing bitrate in song info table!"
     }
